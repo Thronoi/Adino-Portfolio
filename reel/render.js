@@ -1,10 +1,10 @@
-// Renders verse-reel.html to frames, then ffmpeg encodes MP4 (1080x1920, 30fps) with music.
+// Renders verse-reel.html (15s) to frames, then ffmpeg encodes MP4 (1080x1920, 30fps) with music.
 // usage: node render.js <outDir> <output.mp4>
 const { chromium } = require('playwright');
 const { execFileSync } = require('child_process');
 const fs = require('fs'), path = require('path');
 const [outDir, outFile] = process.argv.slice(2);
-const FPS = 30, DURATION = 12;
+const FPS = 30, DURATION = 15;
 (async () => {
   fs.mkdirSync(outDir, { recursive: true });
   const b = await chromium.launch();
