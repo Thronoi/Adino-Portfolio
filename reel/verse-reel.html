@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verse Reel – Psalm 46:10</title>
+<link rel="stylesheet" href="../css/fonts/jost/jost.css">
+<style>
+  :root { --bg1:#0f1b2d; --bg2:#2a1f3d; --gold:#e8c987; --ink:#f6f1e7; }
+  html,body { margin:0; height:100%; background:#000; overflow:hidden; }
+  /* 9:16 stage, scaled to fit any window */
+  #stage { position:absolute; left:50%; top:50%; width:1080px; height:1920px;
+    transform-origin:center; overflow:hidden; background:var(--bg1); color:var(--ink);
+    font-family:'Jost',sans-serif; }
+  #bg { position:absolute; inset:-20%; }
+  #glow { position:absolute; left:50%; top:46%; width:1300px; height:1300px; margin:-650px 0 0 -650px;
+    border-radius:50%; background:radial-gradient(circle, rgba(232,201,135,.35), rgba(232,201,135,0) 65%); }
+  #grain { position:absolute; inset:0; opacity:.07; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); }
+  #content { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 110px; text-align:center; }
+  #kicker { font-weight:500; letter-spacing:.5em; font-size:34px; text-transform:uppercase; color:var(--gold); margin-bottom:70px; }
+  #rule { height:2px; background:var(--gold); width:0; margin:0 auto; }
+  #verse { font-family:'Liberation Serif','Georgia',serif; font-style:italic; font-size:112px; line-height:1.22; margin:70px 0; }
+  #verse .w { display:inline-block; opacity:0; margin:0 .13em; will-change:transform,opacity; }
+  #verse .em { color:var(--gold); }
+  #ref { font-weight:600; letter-spacing:.35em; font-size:44px; text-transform:uppercase; color:var(--gold); }
+  #ver { font-weight:300; font-size:30px; letter-spacing:.3em; margin-top:18px; opacity:.7; }
+  #brand { position:absolute; bottom:150px; width:100%; text-align:center; font-size:30px; letter-spacing:.4em; font-weight:400; color:var(--ink); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bg"></div><div id="glow"></div><div id="grain"></div>
+  <div id="content">
+    <div id="kicker">Be Still</div>
+    <div id="rule"></div>
+    <div id="verse"></div>
+    <div id="rule2" style="height:2px;background:var(--gold);width:0;margin:0 auto 60px"></div>
+    <div id="ref">Psalm 46:10</div>
+    <div id="ver">KJV</div>
+  </div>
+  <div id="brand">ADINO</div>
+</div>
+<script>
+const DURATION = 12;            // seconds
+const TEXT = "Be still, and know that I am God.";
+const EMPH = new Set(["still,","God."]);
+const $ = id => document.getElementById(id);
+const clamp = (x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ease = x => 1-Math.pow(1-clamp(x),3);
+const seg = (t,a,b)=>ease((t-a)/(b-a));
+
+const verse = $('verse');
+const words = TEXT.split(' ').map(w=>{
+  const s=document.createElement('span'); s.className='w'+(EMPH.has(w)?' em':''); s.textContent=w;
+  verse.appendChild(s); return s;
+});
+
+function fit(){ const s=Math.min(innerWidth/1080, innerHeight/1920);
+  $('stage').style.transform=`translate(-50%,-50%) scale(${s})`; }
+addEventListener('resize',fit); fit();
+
+// Deterministic: everything is a pure function of t, so it can be previewed live or rendered frame by frame.
+window.setT = function(t){
+  const a = clamp(t/DURATION);
+  $('bg').style.background =
+    `linear-gradient(${160+a*40}deg, var(--bg1), var(--bg2) ${50+Math.sin(t*.6)*10}%, #1b3a4b)`;
+  const g = $('glow'); g.style.transform=`scale(${1+.12*Math.sin(t*.8)+a*.15})`; g.style.opacity = .5+.4*seg(t,0,3);
+  $('kicker').style.opacity = seg(t,.3,1.4); $('kicker').style.transform=`translateY(${(1-seg(t,.3,1.4))*30}px)`;
+  $('rule').style.width = 220*seg(t,.8,2) + 'px';
+  words.forEach((w,i)=>{ const s=1.8+i*.55, p=seg(t,s,s+.7);
+    w.style.opacity=p; w.style.transform=`translateY(${(1-p)*40}px)`; w.style.filter=`blur(${(1-p)*10}px)`; });
+  $('rule2').style.width = 220*seg(t,6.2,7.2)+'px';
+  $('ref').style.opacity = seg(t,6.8,8); $('ver').style.opacity = .7*seg(t,7.2,8.4);
+  $('brand').style.opacity = .6*seg(t,8,9.5);
+  $('content').style.opacity = 1 - seg(t,DURATION-.8,DURATION);
+  $('content').style.transform = `scale(${1+a*.04})`;
+};
+
+// Live preview unless ?render is in the URL (the renderer drives setT itself)
+if(!location.search.includes('render')){
+  let t0=performance.now();
+  (function loop(n){ setT(((n-t0)/1000)%(DURATION+1)); requestAnimationFrame(loop); })(t0);
+} else setT(0);
+</script>
+</body>
+</html>
